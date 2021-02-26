@@ -3,6 +3,7 @@
 #define _WIN32_WINDOWS
 
 #include <asio.hpp>
+#include <queue>
 
 #include "Common.h"
 #include "Utility.h"
@@ -13,6 +14,8 @@ class TWT_Peer {
     private:
         tcp::resolver *resolver;
         tcp::acceptor *acceptor;
+        std::queue<tcp::socket*> send_sockets;
+        std::queue<tcp::socket*> receive_sockets;
         tcp::socket *send_socket = new tcp::socket(io_context);
         tcp::socket *receive_socket = new tcp::socket(io_context);
     public:

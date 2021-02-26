@@ -31,12 +31,6 @@ void TWT_Peer::TWT_HandleConnection() {
 
 void TWT_Peer::TWT_Listen() {
 
-    if(this->receive_socket->is_open()) {
-        print("Socket is open");
-        this->receive_socket->close();
-    } else {
-        print("Socket is closed");
-    }
     print("Listening on",this->port,"...");
     try {
         this->acceptor->accept(*this->receive_socket);
