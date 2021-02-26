@@ -16,3 +16,9 @@ void print(T t,Args... args) {
     std::cout << t << " ";
     print(args...);
 }
+
+void clear_buffer(char*,int);
+
+std::vector<std::string> split(const std::string&,const std::string &);
+
+void get_and_tokenize_input(std::string&, std::vector<std::string>&);

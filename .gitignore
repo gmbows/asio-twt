@@ -1,2 +1,5 @@
 # Ignore project files
 .idea/
+
+#Ignore executables
+*.exe

@@ -13,7 +13,8 @@ class TWT_Peer {
     private:
         tcp::resolver *resolver;
         tcp::acceptor *acceptor;
-        tcp::socket *socket = new tcp::socket(io_context);
+        tcp::socket *send_socket = new tcp::socket(io_context);
+        tcp::socket *receive_socket = new tcp::socket(io_context);
     public:
         int port;
 
