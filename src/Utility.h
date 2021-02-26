@@ -3,17 +3,24 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <pthread.h>
+
+#include "Common.h"
 
 std::vector<std::string> convert_char_array(char**,int);
 
 template <class T>
 void print(T t) {
+    pthread_mutex_lock(&printLock);
     std::cout << t << std::endl;
+    pthread_mutex_unlock(&printLock);
 }
 
 template <class T,class... Args>
 void print(T t,Args... args) {
-    std::cout << t << " ";
+    pthread_mutex_lock(&printLock);
+    std::cout << t;
+    pthread_mutex_unlock(&printLock);
     print(args...);
 }
 

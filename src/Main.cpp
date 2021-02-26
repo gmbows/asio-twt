@@ -4,6 +4,7 @@
 #include "Network.h"
 #include "Utility.h"
 #include "Thread.h"
+#include "Common.h"
 
 void* test(void *ptr) {
     print("Thread creation successful!");
@@ -13,14 +14,16 @@ void* test(void *ptr) {
 int main(int argc, char** argv) {
     //two way transfer
 
-    TWT_ThreadPool pool = TWT_ThreadPool(10,&test);
-    pool.start_threads();
+    pthread_mutex_init(&printLock,NULL);
+
+//    TWT_ThreadPool<TWT_SocketThread> pool = TWT_ThreadPool<TWT_SocketThread>(10,&test);
+//    pool.start_threads();
 
     //convert char** args to string vector
     std::vector<std::string> arg_vector = convert_char_array(argv,argc);
 
     //Initial peer
-    TWT_Peer peer = TWT_Peer(4422);
+    TWT_Peer peer = TWT_Peer(4422,10);
 
     std::string input;
     std::string cmd;

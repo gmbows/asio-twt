@@ -1,7 +1,15 @@
 #include "Thread.h"
-void* run_thread(void *threadPtr) {
-    static_cast<TWT_Thread*>(threadPtr)->active = true;
-    static_cast<TWT_Thread*>(threadPtr)->routine(nullptr);
-    static_cast<TWT_Thread*>(threadPtr)->active = false;
-    return nullptr;
+
+#include <pthread.h>
+
+#include "Network.h"
+#include "Common.h"
+#include "NetworkUtils.h"
+
+void TWT_ListenerThread::Listen(TWT_Peer *peer,TWT_ListenerThread *thread) {
+    peer->TWT_Listen(thread);
+}
+
+void TWT_SocketThread::AwaitSocket(TWT_Peer *peer,TWT_SocketThread *thread) {
+    peer->TWT_AwaitSocket(thread);
 }
