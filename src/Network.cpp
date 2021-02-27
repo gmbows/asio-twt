@@ -27,14 +27,14 @@ tcp::socket* TWT_Peer::TWT_SafePop(std::queue<tcp::socket*> *queue) {
 void TWT_Peer::TWT_AwaitSocket(TWT_Thread *caller) {
     while(true) {
 //        print("Thread ",caller->id,": Awaiting connection");
-        pthread_mutex_lock(&this->socketLock);
-        while (this->receive_sockets.size() == 0) {
-            pthread_cond_wait(&this->socketSignal,&this->socketLock);
+        pthread_mutex_lock(&this->incomingSocketLock);
+        while (this->incoming_sockets.size() == 0) {
+            pthread_cond_wait(&this->receivedConnection,&this->incomingSocketLock);
         }
 
 //        print("Dispatching thread ",thread->id);
-        tcp::socket *sock = this->TWT_SafePop(&this->receive_sockets);
-        pthread_mutex_unlock(&this->socketLock);
+        tcp::socket *sock = this->TWT_SafePop(&this->incoming_sockets);
+        pthread_mutex_unlock(&this->incomingSocketLock);
 
         this->TWT_ServeSocket(sock,caller);
     }
@@ -58,6 +58,7 @@ void TWT_Peer::TWT_ServeSocket(tcp::socket *sock,TWT_Thread *caller) {
 void TWT_Peer::TWT_Listen(TWT_Thread *caller) {
 
     print("Listening on ",this->port,"...");
+    this->listening = true;
 
     tcp::socket *sock;
 
@@ -70,10 +71,10 @@ void TWT_Peer::TWT_Listen(TWT_Thread *caller) {
             return;
         }
 
-//        pthread_mutex_lock(&this->socketLock);
-        this->receive_sockets.push(sock);
-        pthread_cond_signal(&this->socketSignal);
-//        pthread_mutex_unlock(&this->socketLock);
+//        pthread_mutex_lock(&this->incomingSocketLock);
+        this->incoming_sockets.push(sock);
+        pthread_cond_signal(&this->receivedConnection);
+//        pthread_mutex_unlock(&this->incomingSocketLock);
 
     }
 
@@ -84,6 +85,26 @@ void TWT_Peer::TWT_Send(const std::string &s,tcp::socket *sock) {
     size_t len = asio::write(*sock, asio::buffer(s), error);
     if (error) print("Error: ", error.message());
     print("Wrote ", len, " bytes to socket");
+}
+
+void TWT_Peer::TWT_GreetSocket(tcp::socket *sock,TWT_Thread *caller) {
+    this->TWT_Send("Hello",sock);
+}
+
+void TWT_Peer::TWT_AwaitOutgoingSocket(TWT_Thread *caller) {
+    while(true) {
+//        print("Thread ",caller->id,": Awaiting connection");
+        pthread_mutex_lock(&this->outgoingSocketLock);
+        while (this->outgoing_sockets.size() == 0) {
+            pthread_cond_wait(&this->madeConnection,&this->outgoingSocketLock);
+        }
+
+        print("Greeting socket from thread ",caller->id);
+        tcp::socket *sock = this->TWT_SafePop(&this->outgoing_sockets);
+        pthread_mutex_unlock(&this->outgoingSocketLock);
+
+        this->TWT_GreetSocket(sock,caller);
+    }
 }
 
 bool TWT_Peer::TWT_Connect(const std::string &host) {
@@ -99,9 +120,8 @@ bool TWT_Peer::TWT_Connect(const std::string &host) {
         return false;
     }
     print("Connected to ",host);
-    this->send_sockets.push(sock);
-    this->TWT_Send("Test message",sock);
-//    this->TWT_Send("Test message");
+    this->outgoing_sockets.push(sock);
+    pthread_cond_signal(&this->madeConnection);
 //    this->TWT_CloseSocket(sock);
     return true;
 

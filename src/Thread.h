@@ -16,16 +16,17 @@ typedef void (*ThreadRoutine)(TWT_Peer*,TWT_Thread*);
 
 void DefaultRoutine(TWT_Peer*,TWT_Thread*);
 void AwaitSocket(TWT_Peer*,TWT_Thread*);
+void AwaitOutgoingSocket(TWT_Peer*,TWT_Thread*);
 void Listen(TWT_Peer*,TWT_Thread*);
 
 /* TWT_Thread():
- *      TWT_Thread: generic routineless pthread that performs services for peer objects.
+ *      TWT_Thread: generic pthread that performs services for peer objects.
  *
  *
  *      TWT_SocketThread: TWT_Thread that services sockets after they are received by a listener
  *      TWT_ListenerThread: TWT_Thread that listens for incoming connections for a peer object
  *
- *      Thread routines are specified in class constructor
+ *      Thread routines are defined in class constructor
  *
 */
 
@@ -70,12 +71,21 @@ struct TWT_ListenerThread: public TWT_Thread {
     }
 };
 
-//Receives data from incoming sockets
-struct TWT_SocketThread: public TWT_Thread {
+//Receives data from incoming connections
+struct TWT_IncomingSocketThread: public TWT_Thread {
 
     //Call TWT_Thread constructor
-    TWT_SocketThread(): TWT_Thread() {
+    TWT_IncomingSocketThread(): TWT_Thread() {
         this->routine = &AwaitSocket;
+    }
+};
+
+//Sends data to outgoing connections
+struct TWT_OutgoingSocketThread: public TWT_Thread {
+
+    //Call TWT_Thread constructor
+    TWT_OutgoingSocketThread(): TWT_Thread() {
+        this->routine = &AwaitOutgoingSocket;
     }
 };
 

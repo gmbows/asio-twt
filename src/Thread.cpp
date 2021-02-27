@@ -18,3 +18,7 @@ void Listen(TWT_Peer *peer,TWT_Thread *thread) {
 void AwaitSocket(TWT_Peer *peer,TWT_Thread *thread) {
     peer->TWT_AwaitSocket(thread);
 }
+
+void AwaitOutgoingSocket(TWT_Peer *peer,TWT_Thread *thread) {
+    peer->TWT_AwaitOutgoingSocket(thread);
+}
