@@ -26,6 +26,6 @@ void print(T t,Args... args) {
 
 void clear_buffer(char*,int);
 
-std::vector<std::string> split(const std::string&,const std::string &);
+std::vector<std::string> split(const std::string&,char);
 
-void get_and_tokenize_input(std::string&, char);
+void get_and_tokenize_input(std::string&, std::vector<std::string>&);
