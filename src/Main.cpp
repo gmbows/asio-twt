@@ -23,9 +23,8 @@ int main(int argc, char** argv) {
     std::vector<std::string> arg_vector = convert_char_array(argv,argc);
 
     //Initial peer
-    TWT_Peer peer = TWT_Peer(25565,10);
+    TWT_Peer peer = TWT_Peer(5555,10);
 
-    std::string input;
     std::string cmd;
     std::vector<std::string> args;
 
@@ -40,7 +39,11 @@ int main(int argc, char** argv) {
             while(!peer.listening) {}
 
         } else if(cmd == "connect") {
-            peer.TWT_Connect("127.0.0.1");
+			try {
+            	peer.TWT_Connect(args.at(1));
+			} catch(const std::exception &e) {
+				print("Usage: >>connect [address]");
+			}
         } else {
             print("Unknown command:",cmd);
         }

@@ -17,14 +17,16 @@ void clear_buffer(char* buf,int len) {
     }
 }
 
-std::vector<std::string> split(const std::string &s,const std::string &token) {
+std::vector<std::string> split(const std::string &s,char token) {
     std::vector<std::string> v;
     std::string run = "";
-    for(auto &e : s) {
-        if(std::to_string(e) == token) {
+    char e;
+
+    for(int i=0;i<s.size();++i) {
+		e = s[i];
+        if(e == token) {
             if(run.size() == 0) continue;
             v.push_back(run);
-            print(run);
             run = "";
         } else {
             run += e;
@@ -37,7 +39,7 @@ std::vector<std::string> split(const std::string &s,const std::string &token) {
 void get_and_tokenize_input(std::string &cmd, std::vector<std::string> &args) {
     std::string input;
     std::getline(std::cin,input);
-    if(split(input," ").size() == 0) return;
-    cmd = split(input, " ").at(0);
-    args = split(input, " ");
+    if(split(input,' ').size() == 0) return;
+    cmd = split(input, ' ').at(0);
+    args = split(input, ' ');
 }
