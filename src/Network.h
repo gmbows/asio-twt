@@ -33,14 +33,14 @@ class TWT_Peer {
         bool active = true;
 
         //Server functionality
-        void TWT_Listen(TWT_ListenerThread*);
+        void TWT_Listen(TWT_Thread*);
         void TWT_Listen() {
             print("Starting listener thread");
             this->listener->start(this);
         }
 
-        void TWT_AwaitSocket(TWT_SocketThread*);
-        void TWT_ServeSocket(tcp::socket*,TWT_SocketThread*);
+        void TWT_AwaitSocket(TWT_Thread*);
+        void TWT_ServeSocket(tcp::socket*,TWT_Thread*);
 
         //Client functionality
         void TWT_Send(const std::string &msg,tcp::socket*);

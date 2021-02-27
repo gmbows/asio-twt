@@ -3,12 +3,12 @@
 #include <iostream>
 
 class TWT_Peer;
-struct TWT_Thread;
 
+template <typename ThreadType>
 struct TWT_ThreadPackage {
-    std::tuple<TWT_Peer*,TWT_Thread*> package;
+    std::tuple<TWT_Peer*,ThreadType*> package;
 
-    TWT_ThreadPackage(TWT_Peer *peer,TWT_Thread *thread) {
+    TWT_ThreadPackage(TWT_Peer *peer,ThreadType *thread) {
         this->package = std::make_tuple(peer,thread);
     }
 };

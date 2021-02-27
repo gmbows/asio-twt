@@ -24,9 +24,9 @@ tcp::socket* TWT_Peer::TWT_SafePop(std::queue<tcp::socket*> *queue) {
     return sock;
 }
 
-void TWT_Peer::TWT_AwaitSocket(TWT_SocketThread *caller) {
+void TWT_Peer::TWT_AwaitSocket(TWT_Thread *caller) {
     while(true) {
-        print("Thread",caller->id,": Awaiting connection");
+//        print("Thread ",caller->id,": Awaiting connection");
         pthread_mutex_lock(&this->socketLock);
         while (this->receive_sockets.size() == 0) {
             pthread_cond_wait(&this->socketSignal,&this->socketLock);
@@ -39,7 +39,7 @@ void TWT_Peer::TWT_AwaitSocket(TWT_SocketThread *caller) {
         this->TWT_ServeSocket(sock,caller);
     }
 }
-void TWT_Peer::TWT_ServeSocket(tcp::socket *sock,TWT_SocketThread *caller) {
+void TWT_Peer::TWT_ServeSocket(tcp::socket *sock,TWT_Thread *caller) {
     print("Received connection from ",sock->remote_endpoint().address().to_string());
     char msg[1024];
     clear_buffer(msg,1024);
@@ -55,7 +55,7 @@ void TWT_Peer::TWT_ServeSocket(tcp::socket *sock,TWT_SocketThread *caller) {
     print("Closed socket");
 }
 
-void TWT_Peer::TWT_Listen(TWT_ListenerThread *caller) {
+void TWT_Peer::TWT_Listen(TWT_Thread *caller) {
 
     print("Listening on ",this->port,"...");
 
