@@ -15,10 +15,10 @@ void Listen(TWT_Peer *peer,TWT_Thread *thread) {
     peer->TWT_Listen(thread);
 }
 
-void AwaitSocket(TWT_Peer *peer,TWT_Thread *thread) {
-    peer->TWT_AwaitSocket(thread);
+void AwaitReadJob(TWT_Peer *peer,TWT_Thread *thread) {
+    peer->TWT_AwaitReadJob(thread);
 }
 
-void AwaitOutgoingSocket(TWT_Peer *peer,TWT_Thread *thread) {
-    peer->TWT_AwaitOutgoingSocket(thread);
+void AwaitWriteJob(TWT_Peer *peer,TWT_Thread *thread) {
+    peer->TWT_AwaitWriteJob(thread);
 }

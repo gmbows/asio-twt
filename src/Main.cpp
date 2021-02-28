@@ -16,9 +16,6 @@ int main(int argc, char** argv) {
 
     pthread_mutex_init(&printLock,NULL);
 
-//    TWT_ThreadPool<TWT_SocketThread> pool = TWT_ThreadPool<TWT_SocketThread>(10,&test);
-//    pool.start_threads();
-
     //convert char** args to string vector
     std::vector<std::string> arg_vector = convert_char_array(argv,argc);
 
@@ -36,13 +33,15 @@ int main(int argc, char** argv) {
             break;
         } else if(cmd == "serv") {
             peer.TWT_Listen();
+
+            //Wait for thread to enter listening function
             while(!peer.listening) {}
 
         } else if(cmd == "connect") {
 			try {
             	peer.TWT_Connect(args.at(1));
 			} catch(const std::exception &e) {
-				print("Usage: >>connect [address]");
+				print("Usage: connect [address]");
 			}
         } else {
             print("Unknown command:",cmd);

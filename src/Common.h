@@ -1,7 +1,8 @@
 #pragma once
 #include <asio.hpp>
 #include <pthread.h>
-#define TWT_DEFAULT_PORT 13
+
+#define TWT_BUFFER_SIZE 1024
 
 extern pthread_mutex_t printLock;
 

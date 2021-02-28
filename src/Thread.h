@@ -15,8 +15,8 @@ class TWT_Thread;
 typedef void (*ThreadRoutine)(TWT_Peer*,TWT_Thread*);
 
 void DefaultRoutine(TWT_Peer*,TWT_Thread*);
-void AwaitSocket(TWT_Peer*,TWT_Thread*);
-void AwaitOutgoingSocket(TWT_Peer*,TWT_Thread*);
+void AwaitReadJob(TWT_Peer*,TWT_Thread*);
+void AwaitWriteJob(TWT_Peer*,TWT_Thread*);
 void Listen(TWT_Peer*,TWT_Thread*);
 
 /* TWT_Thread():
@@ -72,20 +72,20 @@ struct TWT_ListenerThread: public TWT_Thread {
 };
 
 //Receives data from incoming connections
-struct TWT_IncomingSocketThread: public TWT_Thread {
+struct TWT_ReadThread: public TWT_Thread {
 
     //Call TWT_Thread constructor
-    TWT_IncomingSocketThread(): TWT_Thread() {
-        this->routine = &AwaitSocket;
+    TWT_ReadThread(): TWT_Thread() {
+        this->routine = &AwaitReadJob;
     }
 };
 
 //Sends data to outgoing connections
-struct TWT_OutgoingSocketThread: public TWT_Thread {
+struct TWT_WriteThread: public TWT_Thread {
 
     //Call TWT_Thread constructor
-    TWT_OutgoingSocketThread(): TWT_Thread() {
-        this->routine = &AwaitOutgoingSocket;
+    TWT_WriteThread(): TWT_Thread() {
+        this->routine = &AwaitWriteJob;
     }
 };
 
@@ -105,7 +105,7 @@ struct TWT_ThreadPool {
         return true;
     }
 
-    bool start_threads() {
+    bool start() {
         for(auto &thread : this->threads) {
             if(!thread->start(this->peer)) return false;
         }
