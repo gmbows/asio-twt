@@ -6,9 +6,13 @@
 #include "Common.h"
 #include "Utility.h"
 
+
+
 class TWT_Peer;
 
 using asio::ip::tcp;
+
+std::string get_address(tcp::socket *sock);
 
 struct TWT_Packet {
     tcp::socket *sock;

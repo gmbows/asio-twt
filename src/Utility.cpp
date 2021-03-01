@@ -1,5 +1,6 @@
 #include "Utility.h"
 #include <string>
+#include <fstream>
 
 //Converts char* array of length len to string vector
 std::vector<std::string> convert_char_array(char** arr,int len) {
@@ -42,4 +43,75 @@ void get_and_tokenize_input(std::string &cmd, std::vector<std::string> &args) {
     if(split(input,' ').size() == 0) return;
     cmd = split(input, ' ').at(0);
     args = split(input, ' ');
+}
+
+void tokenize(const std::string &input,std::string &cmd, std::vector<std::string> &args) {
+    if(split(input,' ').size() == 0) return;
+    cmd = split(input, ' ').at(0);
+    args = split(input, ' ');
+}
+
+std::string operator *(const std::string &s, int len) {
+    std::string output = "";
+    for(int i=0;i<len;++i) {
+        output += s;
+    }
+    return output;
+}
+
+std::string read_command(const std::string &cursor) {
+    std::string cmd = "";
+    std::string space = " ";
+
+    std::cout << cursor << std::flush;
+
+    while(true) {
+        int keycode = getch();
+        switch(keycode) {
+            case 13:
+                std::cout << std::endl;
+                return cmd;
+            case 3:
+                return "quit";
+            case 8:
+                cmd = cmd.substr(0,cmd.size()-1);
+                break;
+            default:
+                if(keycode >= 0 and keycode <= 255) {
+                    cmd += (char)keycode;
+                } else {
+                }
+                break;
+        }
+        //Clear current terminal line
+        // +1 for backspace
+        std::cout << "\r" << space*(cursor.size()+cmd.size()+1) << "\r" << std::flush;
+        std::cout << cursor << cmd << std::flush;
+    }
+    return "ERR_COMMAND_INVALID";
+}
+
+size_t import_file(const std::string &filename,char* &data) {
+    std::ifstream image(filename,std::ios::binary);
+
+    if(!image.is_open()) {
+        print("(import) Error opening ",filename);
+        return false;
+    }
+
+    //Seek to EOF and check position in stream
+    image.seekg(0,image.end);
+    size_t size = image.tellg();
+    image.seekg(0,image.beg);
+
+    data = (char*)malloc(size);
+
+    char c;
+    int i = 0;
+    while(image >> std::noskipws >> c) {
+         data[i++] = c;
+    }
+
+    image.close();
+    return size;
 }

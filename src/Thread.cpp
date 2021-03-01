@@ -15,6 +15,10 @@ void Listen(TWT_Peer *peer,TWT_Thread *thread) {
     peer->TWT_Listen(thread);
 }
 
+void HandleInput(TWT_Peer *peer,TWT_Thread *thread) {
+//    handle_input();
+}
+
 void AwaitReadJob(TWT_Peer *peer,TWT_Thread *thread) {
     peer->TWT_AwaitReadJob(thread);
 }

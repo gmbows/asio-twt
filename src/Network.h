@@ -5,6 +5,7 @@
 #include <asio.hpp>
 #include <pthread.h>
 #include <queue>
+#include <map>
 
 #include "Common.h"
 #include "Utility.h"
@@ -18,16 +19,20 @@ class TWT_Peer {
         tcp::resolver *resolver;
         tcp::acceptor *acceptor;
     public:
-        std::queue<tcp::socket*> connections;
-        std::queue<TWT_Packet*> pendingData;
-
         pthread_mutex_t readLock = PTHREAD_MUTEX_INITIALIZER;
         pthread_mutex_t writeLock = PTHREAD_MUTEX_INITIALIZER;
         pthread_mutex_t popLock = PTHREAD_MUTEX_INITIALIZER;
         pthread_cond_t gotReadJob = PTHREAD_COND_INITIALIZER;
         pthread_cond_t gotWriteJob = PTHREAD_COND_INITIALIZER;
 
+        //A single listening thread
         TWT_ListenerThread *listener = new TWT_ListenerThread();
+
+        //Queues that read/write threads work from
+        std::queue<tcp::socket*> connections;
+        std::queue<TWT_Packet*> pendingData;
+
+        std::map<std::string,tcp::socket*> addressMap;
 
         TWT_ThreadPool<TWT_ReadThread> readers;
         TWT_ThreadPool<TWT_WriteThread> writers;
@@ -37,10 +42,15 @@ class TWT_Peer {
         bool active;
         bool listening;
 
+        int numConnections;
+
         //Server functionality
         void TWT_Listen(TWT_Thread*);
         void TWT_Listen() {
-//            print("Starting listener thread");
+            if(this->listening) {
+                print("Already listening");
+                return;
+            }
             this->listener->start(this);
         }
 
@@ -49,8 +59,8 @@ class TWT_Peer {
         void TWT_ServeSocket(tcp::socket*,TWT_Thread*);
 
         //Client functionality
-        void TWT_Send(TWT_Packet*);
-        void TWT_GreetSocket(tcp::socket*,TWT_Thread*);
+        void TWT_SendPacket(TWT_Packet*);
+        void TWT_FormatAndSend(const std::string&,const std::string&);
         bool TWT_Connect(const std::string &host);
 
         //Thread routine for handling outgoing connections
@@ -69,8 +79,21 @@ class TWT_Peer {
             if(sock->is_open()) {
                 sock->shutdown(tcp::socket::shutdown_send,err);
             }
+            for(auto it = this->addressMap.begin();it != this->addressMap.end();it++) {
+                if((char*)it->second == (char*)sock) {
+                    this->addressMap.erase(it);
+                    break;
+                }
+            }
             if(err) print("TWT_CloseSocket():",err.message());
         }
+
+    void TWT_CloseConnection(const std::string &sock_id) {
+        asio::error_code err;
+        if(contains(this->addressMap,sock_id)) {
+            this->TWT_CloseSocket(this->addressMap.at(sock_id));
+        }
+    }
 
         TWT_Peer(int _port,int numThreads): port(_port),acceptor(new tcp::acceptor(io_context, tcp::endpoint(tcp::v4(), _port))),resolver(new tcp::resolver(io_context)) {
 
@@ -88,6 +111,8 @@ class TWT_Peer {
 
             this->readers.start();
             this->writers.start();
+
+            this->numConnections = 0;
 
             this->active = true;
 

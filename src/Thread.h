@@ -18,6 +18,7 @@ void DefaultRoutine(TWT_Peer*,TWT_Thread*);
 void AwaitReadJob(TWT_Peer*,TWT_Thread*);
 void AwaitWriteJob(TWT_Peer*,TWT_Thread*);
 void Listen(TWT_Peer*,TWT_Thread*);
+void HandleInput(TWT_Peer*,TWT_Thread*);
 
 /* TWT_Thread():
  *      TWT_Thread: generic pthread that performs services for peer objects.
@@ -68,6 +69,15 @@ struct TWT_ListenerThread: public TWT_Thread {
     //Call TWT_Thread constructor
     TWT_ListenerThread(): TWT_Thread() {
         this->routine = &Listen;
+    }
+};
+
+//Sends data to outgoing connections
+struct TWT_InputThread: public TWT_Thread {
+
+    //Call TWT_Thread constructor
+    TWT_InputThread(): TWT_Thread() {
+        this->routine = &HandleInput;
     }
 };
 
