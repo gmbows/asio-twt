@@ -1,6 +1,17 @@
 #include "Utility.h"
 #include <string>
 #include <fstream>
+#include <sstream>
+
+std::stringstream statement;
+
+std::string operator *(const std::string &s, int len) {
+    std::string output = "";
+    for(int i=0;i<len;++i) {
+        output += s;
+    }
+    return output;
+}
 
 //Converts char* array of length len to string vector
 std::vector<std::string> convert_char_array(char** arr,int len) {
@@ -51,25 +62,24 @@ void tokenize(const std::string &input,std::string &cmd, std::vector<std::string
     args = split(input, ' ');
 }
 
-std::string operator *(const std::string &s, int len) {
-    std::string output = "";
-    for(int i=0;i<len;++i) {
-        output += s;
-    }
-    return output;
-}
+std::string command = "";
+std::string cursor = ">>";
 
-std::string read_command(const std::string &cursor) {
+std::string read_command(const std::string &_cursor) {
+
+    cursor = _cursor;
+
     std::string cmd = "";
     std::string space = " ";
 
-    std::cout << cursor << std::flush;
+    std::cout << "\r" << cursor << std::flush;
 
     while(true) {
         int keycode = getch();
         switch(keycode) {
             case 13:
                 std::cout << std::endl;
+                command = "";
                 return cmd;
             case 3:
                 return "quit";
@@ -83,6 +93,10 @@ std::string read_command(const std::string &cursor) {
                 }
                 break;
         }
+
+        //Update global command
+        command = cmd;
+
         //Clear current terminal line
         // +1 for backspace
         std::cout << "\r" << space*(cursor.size()+cmd.size()+1) << "\r" << std::flush;

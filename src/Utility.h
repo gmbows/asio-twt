@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -9,19 +10,30 @@
 
 #include "Common.h"
 
+extern std::string command,cursor;
+
+extern std::stringstream statement;
+
 std::vector<std::string> convert_char_array(char**,int);
+
+std::string operator *(const std::string &s, int len);
 
 template <class T>
 void print(T t) {
+    std::string space = " ";
     pthread_mutex_lock(&printLock);
-    std::cout << t << std::endl;
+    statement << t;
+    std::cout << "\r" << space*(cursor.size()+command.size()+1) << "\r" << std::flush;
+    std::cout << statement.str() << std::endl;
+    std::cout << cursor << command << std::flush;
+    statement.str("");
     pthread_mutex_unlock(&printLock);
 }
 
 template <class T,class... Args>
 void print(T t,Args... args) {
     pthread_mutex_lock(&printLock);
-    std::cout << t;
+    statement << t;
     pthread_mutex_unlock(&printLock);
     print(args...);
 }

@@ -58,11 +58,10 @@ void TWT_Peer::TWT_ServeSocket(tcp::socket *sock,TWT_Thread *caller) {
     while(!error) {
         size_t len = sock->read_some(asio::buffer(msg,TWT_BUFFER_SIZE), error);
         std::string s(msg);
-        print(s);
+        if(s.size() > 0) print(s);
         clear_buffer(msg,TWT_BUFFER_SIZE);
     }
     print("Error: ",error.message());
-    print("Received disconnect, deleting socket");
     this->TWT_CloseSocket(sock);
 }
 

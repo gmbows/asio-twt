@@ -81,6 +81,7 @@ class TWT_Peer {
             }
             for(auto it = this->addressMap.begin();it != this->addressMap.end();it++) {
                 if((char*)it->second == (char*)sock) {
+                    print("Closed connection ",it->first);
                     this->addressMap.erase(it);
                     break;
                 }

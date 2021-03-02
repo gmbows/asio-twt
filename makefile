@@ -4,6 +4,10 @@ twt.exe: bin/Main.o bin/Utility.o bin/Network.o bin/Common.o bin/Thread.o bin/Ne
 bin/Main.o: src/Main.cpp
 	g++ src/Main.cpp -c -o bin/Main.o
 
+bin/Command.o: src/Command.cpp src/Command.h
+	g++ src/Command.cpp -c -o bin/Command.o
+
+
 bin/Utility.o: src/Utility.cpp src/Utility.h
 	g++ src/Utility.cpp -c -o bin/Utility.o
 
