@@ -80,17 +80,19 @@ void TWT_Peer::TWT_Listen(TWT_Thread *caller) {
             print(e.what());
             return;
         }
+        this->TWT_Link(sock);
     }
-    this->TWT_Link(sock);
 }
 
 void TWT_Peer::TWT_Link(tcp::socket *sock) {
     clean_insert(this->addressMap,std::to_string(this->numConnections++),sock);
+
     this->connections.push(sock);
+    pthread_cond_signal(&this->gotReadJob);
+
     TWT_Packet *packet = new TWT_Packet(sock,"Link received");
     this->pendingData.push(packet);
     pthread_cond_signal(&this->gotWriteJob);
-    pthread_cond_signal(&this->gotReadJob);
 }
 
 void TWT_Peer::TWT_SendPacket(TWT_Packet *packet) {

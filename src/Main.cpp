@@ -57,6 +57,8 @@ int main(int argc, char** argv) {
             }
         } else if(cmd == "close") {
             CMD_Close(peer,cmd,args);
+        } else if(cmd == "send") {
+            //Send file....
         } else {
             print("Unknown command:",cmd);
         }
