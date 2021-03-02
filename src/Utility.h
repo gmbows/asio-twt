@@ -67,3 +67,4 @@ void get_and_tokenize_input(std::string&, std::vector<std::string>&);
 void tokenize(const std::string &input,std::string &cmd, std::vector<std::string> &args);
 
 size_t import_file(const std::string &filename,char*&);
+bool export_file(const std::string &filename,char*,size_t size);

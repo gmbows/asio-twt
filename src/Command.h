@@ -12,7 +12,7 @@ void CMD_Connect(TWT_Peer *peer, const std::string &cmd, const std::vector<std::
     }
 }
 
-void CMD_Send(TWT_Peer *peer, const std::string &cmd, const std::vector<std::string> &args) {
+void CMD_Chat(TWT_Peer *peer, const std::string &cmd, const std::vector<std::string> &args) {
     std::string msg = "Chat room opened";
     std::string sock = "0";
     try {
@@ -22,10 +22,10 @@ void CMD_Send(TWT_Peer *peer, const std::string &cmd, const std::vector<std::str
     }
     cursor = "send "+sock+">";
     while(msg != "q" and msg != "quit") {
-        peer->TWT_FormatAndSend("(Remote) "+msg,sock);
+        peer->TWT_FormatAndSend(msg,sock);
         msg = read_command(cursor);
     }
-    peer->TWT_FormatAndSend("(Remote) Chat room closed",sock);
+    peer->TWT_FormatAndSend("Chat room closed",sock);
     cursor = ">>";
 }
 

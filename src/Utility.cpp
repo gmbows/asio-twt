@@ -129,3 +129,16 @@ size_t import_file(const std::string &filename,char* &data) {
     image.close();
     return size;
 }
+
+bool export_file(const std::string &filename,char* bytes,size_t size) {
+    std::ofstream image(filename,std::ios::binary);
+    if(!image.is_open()) {
+        std::cout << "(export) Error opening "+filename << std::endl;
+        return false;
+    }
+    for(int i=0;i<size;i++) {
+        image << bytes[i];
+    }
+    image.close();
+    return true;
+}

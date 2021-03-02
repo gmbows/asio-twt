@@ -36,8 +36,6 @@ int main(int argc, char** argv) {
     std::string cmd;
     std::vector<std::string> args;
 
-    std::string lastConnection = "0";
-
     while(true) {
         std::string input = read_command(cursor);
         tokenize(input,cmd,args);
@@ -51,8 +49,8 @@ int main(int argc, char** argv) {
             while(!peer->listening) {}
         } else if(cmd == "connect") {
 			CMD_Connect(peer,cmd,args);
-        } else if(cmd == "send") {
-            CMD_Send(peer,cmd,args);
+        } else if(cmd == "chat") {
+            CMD_Chat(peer,cmd,args);
         } else if(cmd == "list") {
             for (auto it = peer->addressMap.begin(); it != peer->addressMap.end(); it++) {
                 print(it->first, ": ", get_address(it->second));

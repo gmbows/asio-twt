@@ -58,7 +58,7 @@ void TWT_Peer::TWT_ServeSocket(tcp::socket *sock,TWT_Thread *caller) {
     while(!error) {
         size_t len = sock->read_some(asio::buffer(msg,TWT_BUFFER_SIZE), error);
         std::string s(msg);
-        if(s.size() > 0) print(s);
+        if(s.size() > 0) print("(Remote): ",s);
         clear_buffer(msg,TWT_BUFFER_SIZE);
     }
     print("Error: ",error.message());
@@ -80,18 +80,17 @@ void TWT_Peer::TWT_Listen(TWT_Thread *caller) {
             print(e.what());
             return;
         }
-
-//        pthread_mutex_lock(&this->readLock);
-        clean_insert(this->addressMap,std::to_string(this->numConnections++),sock);
-        this->connections.push(sock);
-        TWT_Packet *packet = new TWT_Packet(sock,"SERV Welcome");
-        this->pendingData.push(packet);
-        pthread_cond_signal(&this->gotWriteJob);
-        pthread_cond_signal(&this->gotReadJob);
-//        pthread_mutex_unlock(&this->readLock);
-
     }
+    this->TWT_Link(sock);
+}
 
+void TWT_Peer::TWT_Link(tcp::socket *sock) {
+    clean_insert(this->addressMap,std::to_string(this->numConnections++),sock);
+    this->connections.push(sock);
+    TWT_Packet *packet = new TWT_Packet(sock,"Link received");
+    this->pendingData.push(packet);
+    pthread_cond_signal(&this->gotWriteJob);
+    pthread_cond_signal(&this->gotReadJob);
 }
 
 void TWT_Peer::TWT_SendPacket(TWT_Packet *packet) {
@@ -132,7 +131,7 @@ void TWT_Peer::TWT_AwaitWriteJob(TWT_Thread *caller) {
 }
 
 bool TWT_Peer::TWT_Connect(const std::string &host) {
-    print("Connecting to ",host,":",this->port);
+    print("Linking to ",host,":",this->port);
 
     tcp::socket *sock;
 
@@ -144,11 +143,7 @@ bool TWT_Peer::TWT_Connect(const std::string &host) {
         print(e.what());
         return false;
     }
-    clean_insert(this->addressMap,std::to_string(this->numConnections++),sock);
-    print("Connected to ",host);
-    this->connections.push(sock);
-    pthread_cond_signal(&this->gotReadJob);
-//    this->TWT_CloseSocket(sock);
+    this->TWT_Link(sock);
     return true;
 
 }

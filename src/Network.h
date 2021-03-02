@@ -58,6 +58,8 @@ class TWT_Peer {
         void TWT_AwaitReadJob(TWT_Thread*);
         void TWT_ServeSocket(tcp::socket*,TWT_Thread*);
 
+        void TWT_Link(tcp::socket*);
+
         //Client functionality
         void TWT_SendPacket(TWT_Packet*);
         void TWT_FormatAndSend(const std::string&,const std::string&);
@@ -107,8 +109,8 @@ class TWT_Peer {
             pthread_mutex_init(&this->writeLock,NULL);
             pthread_mutex_init(&this->popLock,NULL);
 
-            this->readers = TWT_ThreadPool<TWT_ReadThread>(10,this);
-            this->writers = TWT_ThreadPool<TWT_WriteThread>(10,this);
+            this->readers = TWT_ThreadPool<TWT_ReadThread>(numThreads,this);
+            this->writers = TWT_ThreadPool<TWT_WriteThread>(numThreads,this);
 
             this->readers.start();
             this->writers.start();
@@ -117,6 +119,6 @@ class TWT_Peer {
 
             this->active = true;
 
-            print("Peer initialized on port ",_port," with ",numThreads," connection threads");
+            print("Peer initialized on port ",_port);
         }
 };
