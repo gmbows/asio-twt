@@ -20,7 +20,7 @@ void CMD_Chat(TWT_Peer *peer, const std::string &cmd, const std::vector<std::str
     } catch(const std::exception &e) {
         sock = "0";
     }
-    cursor = "send "+sock+">";
+    cursor = "chat "+sock+">";
     while(msg != "q" and msg != "quit") {
         peer->TWT_FormatAndSend(msg,sock);
         msg = read_command(cursor);
@@ -37,16 +37,5 @@ void CMD_Close(TWT_Peer *peer, const std::string &cmd, const std::vector<std::st
 //                print("Usage: ")
         sock_id = "0";
     }
-    if(!contains(peer->addressMap,sock_id)) {
-        print("No active connection with id ",sock_id);
-        return;
-    }
-    for (auto it = peer->addressMap.begin(); it != peer->addressMap.end(); it++) {
-        if(it->first == sock_id) {
-            asio::error_code err;
-            peer->TWT_CloseConnection(it->first);
-//            print("Closed connection to ",get_address(it->second));
-            break;
-        }
-    }
+    peer->TWT_MarkSocketForClosing(sock_id);
 }

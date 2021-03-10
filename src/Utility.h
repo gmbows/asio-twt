@@ -63,8 +63,8 @@ void clear_buffer(char*,int);
 
 std::vector<std::string> split(const std::string&,char);
 
-void get_and_tokenize_input(std::string&, std::vector<std::string>&);
-void tokenize(const std::string &input,std::string &cmd, std::vector<std::string> &args);
+void get_and_tokenize_input(std::vector<std::string>&);
+int tokenize(const std::string &input,std::vector<std::string> &args);
 
 size_t import_file(const std::string &filename,char*&);
 bool export_file(const std::string &filename,char*,size_t size);

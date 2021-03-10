@@ -17,6 +17,7 @@ typedef void (*ThreadRoutine)(TWT_Peer*,TWT_Thread*);
 void DefaultRoutine(TWT_Peer*,TWT_Thread*);
 void AwaitReadJob(TWT_Peer*,TWT_Thread*);
 void AwaitWriteJob(TWT_Peer*,TWT_Thread*);
+void AwaitCloseJob(TWT_Peer*,TWT_Thread*);
 void Listen(TWT_Peer*,TWT_Thread*);
 void HandleInput(TWT_Peer*,TWT_Thread*);
 
@@ -37,6 +38,10 @@ struct TWT_Thread {
     pthread_t thread;
 
     ThreadRoutine routine;
+
+    void join()  {
+        pthread_join(this->thread,NULL);
+    }
 
     static void* run(void *ptr) {
         TWT_ThreadPackage<TWT_Thread> *package = static_cast<TWT_ThreadPackage<TWT_Thread>*>(ptr);
@@ -99,6 +104,15 @@ struct TWT_WriteThread: public TWT_Thread {
     }
 };
 
+//Closes pending closed sockets
+struct TWT_CloserThread: public TWT_Thread {
+
+    //Call TWT_Thread constructor
+    TWT_CloserThread(): TWT_Thread() {
+        this->routine = &AwaitCloseJob;
+    }
+};
+
 template <class ThreadType>
 struct TWT_ThreadPool {
 
@@ -118,6 +132,13 @@ struct TWT_ThreadPool {
     bool start() {
         for(auto &thread : this->threads) {
             if(!thread->start(this->peer)) return false;
+        }
+        return true;
+    }
+
+    bool stop() {
+        for(auto &thread : this->threads) {
+            thread->join();
         }
         return true;
     }

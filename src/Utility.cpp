@@ -48,18 +48,17 @@ std::vector<std::string> split(const std::string &s,char token) {
     return v;
 }
 
-void get_and_tokenize_input(std::string &cmd, std::vector<std::string> &args) {
+void get_and_tokenize_input(std::vector<std::string> &args) {
     std::string input;
     std::getline(std::cin,input);
     if(split(input,' ').size() == 0) return;
-    cmd = split(input, ' ').at(0);
     args = split(input, ' ');
 }
 
-void tokenize(const std::string &input,std::string &cmd, std::vector<std::string> &args) {
-    if(split(input,' ').size() == 0) return;
-    cmd = split(input, ' ').at(0);
+int tokenize(const std::string &input, std::vector<std::string> &args) {
+//    if(split(input,' ').size() == 0) return 0;
     args = split(input, ' ');
+    return args.size();
 }
 
 std::string command = "";

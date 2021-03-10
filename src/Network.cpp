@@ -10,12 +10,26 @@
 
 using asio::ip::tcp;
 
-tcp::socket* TWT_Peer::TWT_SafePop(std::queue<tcp::socket*> *queue) {
+tcp::socket* TWT_Peer::TWT_PopClosingQueue() {
     pthread_mutex_lock(&this->popLock);
     tcp::socket *sock;
     try {
-        sock = queue->front();
-        queue->pop();
+        sock = this->pendingClosings.front();
+        this->pendingClosings.pop();
+    } catch(const std::exception &e) {
+        print("Error: Popping from empty queue");
+        sock = nullptr;
+    }
+    pthread_mutex_unlock(&this->popLock);
+    return sock;
+}
+
+tcp::socket* TWT_Peer::TWT_PopReadQueue() {
+    pthread_mutex_lock(&this->popLock);
+    tcp::socket *sock;
+    try {
+        sock = this->connections.front();
+        this->connections.pop();
     } catch(const std::exception &e) {
         print("Error: Popping from empty queue");
         sock = nullptr;
@@ -39,19 +53,27 @@ TWT_Packet* TWT_Peer::TWT_PopWriteQueue() {
 }
 
 void TWT_Peer::TWT_AwaitReadJob(TWT_Thread *caller) {
-    while(true) {
+    while(this->active) {
         pthread_mutex_lock(&this->readLock);
-        while (this->connections.size() == 0) {
+        while (this->active and this->connections.size() == 0) {
             pthread_cond_wait(&this->gotReadJob,&this->readLock);
         }
-        tcp::socket *sock = this->TWT_SafePop(&this->connections);
-        pthread_mutex_unlock(&this->readLock);
 
-        this->TWT_ServeSocket(sock,caller);
+        if(this->active) {
+
+            tcp::socket *sock = this->TWT_PopReadQueue();
+            pthread_mutex_unlock(&this->readLock);
+
+            this->TWT_ServeSocket(sock, caller);
+        } else {
+            pthread_mutex_unlock(&this->readLock);
+        }
     }
+//    print("Read thread exiting");
 }
+
 void TWT_Peer::TWT_ServeSocket(tcp::socket *sock,TWT_Thread *caller) {
-    print("Received connection from ",get_address(sock));
+    print("Received link from ",get_address(sock));
     char msg[TWT_BUFFER_SIZE];
     clear_buffer(msg,TWT_BUFFER_SIZE);
     asio::error_code error;
@@ -61,13 +83,18 @@ void TWT_Peer::TWT_ServeSocket(tcp::socket *sock,TWT_Thread *caller) {
         if(s.size() > 0) print("(Remote): ",s);
         clear_buffer(msg,TWT_BUFFER_SIZE);
     }
-    print("Error: ",error.message());
-    this->TWT_CloseSocket(sock);
+    switch(error.value()) {
+        case 2:
+            break;
+        default:
+            print("Unexpected socket error: ",error.value(),", ",error.message);
+    }
+    this->TWT_MarkSocketForClosing(sock);
 }
 
 void TWT_Peer::TWT_Listen(TWT_Thread *caller) {
 
-    print("Listening on ",this->port,"...");
+    print("Joined peer network on port ",this->port);
     this->listening = true;
 
     tcp::socket *sock;
@@ -90,7 +117,8 @@ void TWT_Peer::TWT_Link(tcp::socket *sock) {
     this->connections.push(sock);
     pthread_cond_signal(&this->gotReadJob);
 
-    TWT_Packet *packet = new TWT_Packet(sock,"Link received");
+    print("Linked to ",get_address(sock));
+    TWT_Packet *packet = new TWT_Packet(sock,"Link successful");
     this->pendingData.push(packet);
     pthread_cond_signal(&this->gotWriteJob);
 }
@@ -120,20 +148,27 @@ void TWT_Peer::TWT_FormatAndSend(const std::string &message,const std::string &s
 void TWT_Peer::TWT_AwaitWriteJob(TWT_Thread *caller) {
     while(this->active) {
         pthread_mutex_lock(&this->writeLock);
-        while (this->pendingData.size() == 0) {
+        while (this->active and this->pendingData.size() == 0) {
             pthread_cond_wait(&this->gotWriteJob,&this->writeLock);
         }
 
-        TWT_Packet *packet = this->TWT_PopWriteQueue();
-        pthread_mutex_unlock(&this->writeLock);
+        //If peer is no longer active when we wake up, return
+        if(this->active) {
 
-        this->TWT_SendPacket(packet);
+            TWT_Packet *packet = this->TWT_PopWriteQueue();
+            pthread_mutex_unlock(&this->writeLock);
+
+            this->TWT_SendPacket(packet);
+
+        } else {
+            pthread_mutex_unlock(&this->writeLock);
+        }
 
     }
+//    print("Write thread exiting");
 }
 
 bool TWT_Peer::TWT_Connect(const std::string &host) {
-    print("Linking to ",host,":",this->port);
 
     tcp::socket *sock;
 
@@ -141,11 +176,65 @@ bool TWT_Peer::TWT_Connect(const std::string &host) {
         sock = new tcp::socket(io_context);
         tcp::resolver::results_type endpoints = this->resolver->resolve(host, std::to_string(this->port));
         asio::connect(*sock, endpoints);
+        this->TWT_Link(sock);
     } catch(const std::exception &e) {
         print(e.what());
         return false;
     }
-    this->TWT_Link(sock);
+
     return true;
 
+}
+
+void TWT_Peer::TWT_CloseSocket(tcp::socket *sock) {
+    asio::error_code err;
+    try {
+        if (sock->is_open()) {
+            sock->shutdown(tcp::socket::shutdown_send, err);
+            if(err) print("TWT_CloseSocket():",err.message());
+        }
+    } catch(const std::exception &e) {
+        print("Error closing socket: ",e.what());
+    }
+    try {
+        //Try to remove socket from connections list
+        for(auto it = this->addressMap.begin();it != this->addressMap.end();it++) {
+            if((char*)it->second == (char*)sock) {
+                print("Closed connection ",it->first);
+                this->addressMap.erase(it);
+                break;
+            }
+        }
+    } catch(const std::exception &e) {
+        print("General error: ",e.what());
+    }
+}
+
+void TWT_Peer::TWT_MarkSocketForClosing(tcp::socket *sock) {
+    this->pendingClosings.push(sock);
+    pthread_cond_signal(&this->gotCloseJob);
+}
+
+void TWT_Peer::TWT_MarkSocketForClosing(const std::string &sock_id) {
+    try {
+        if(contains(this->addressMap,sock_id)) {
+            this->TWT_MarkSocketForClosing(this->addressMap.at(sock_id));
+        }
+    } catch(const std::exception &e) {
+        print("General error: ",e.what());
+    }
+}
+
+void TWT_Peer::TWT_AwaitCloseJob(TWT_Thread *caller) {
+    while(true) {
+        pthread_mutex_lock(&this->closeLock);
+        while (this->pendingClosings.size() == 0) {
+            pthread_cond_wait(&this->gotCloseJob,&this->closeLock);
+        }
+
+        tcp::socket *sock = this->TWT_PopClosingQueue();
+        pthread_mutex_unlock(&this->closeLock);
+
+        this->TWT_CloseSocket(sock);
+    }
 }

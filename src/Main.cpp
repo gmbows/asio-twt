@@ -33,14 +33,22 @@ int main(int argc, char** argv) {
     char *temp;
     size_t size = import_file("twt.exe",temp);
 
-    std::string cmd;
-    std::vector<std::string> args;
-
     while(true) {
+        std::vector<std::string> args;
+        std::string cmd;
+
+        //Get input
         std::string input = read_command(cursor);
-        tokenize(input,cmd,args);
+
+        //Tokenize
+        int arg_len = tokenize(input,args);
+        cmd = args.at(0);
+
         if(cmd == "q" or cmd == "quit") {
-            print("Exiting");
+            for(auto &connection: peer->addressMap) {
+                peer->TWT_MarkSocketForClosing(connection.second);
+            }
+            peer->TWT_Deactivate();
             break;
         } else if(cmd == "serv") {
             peer->TWT_Listen();
@@ -63,6 +71,6 @@ int main(int argc, char** argv) {
             print("Unknown command:",cmd);
         }
     }
-
+    std::cout << "Exiting" << std::flush;
     return 0;
 }

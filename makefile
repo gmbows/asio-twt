@@ -22,3 +22,6 @@ bin/NetworkUtils.o: src/NetworkUtils.cpp src/NetworkUtils.h
 
 bin/Network.o: src/Network.cpp src/Network.h
 	g++ src/Network.cpp -c -lws2_32 -lwsock32  -o bin/Network.o
+	
+clean:
+	del bin\*
