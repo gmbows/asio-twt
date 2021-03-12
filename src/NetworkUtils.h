@@ -1,7 +1,9 @@
 #pragma once
 #include <tuple>
+#include <vector>
 #include <iostream>
 #include <asio.hpp>
+#include <fstream>
 
 #include "Common.h"
 #include "Utility.h"
@@ -14,28 +16,68 @@ using asio::ip::tcp;
 
 std::string get_address(tcp::socket *sock);
 
+struct TWT_File {
+    std::string filename;
+    std::vector<char> data;
+
+    bool valid;
+
+    bool import() {
+        std::ifstream file(this->filename,std::ios::binary);
+        if(file.is_open()) {
+            char c;
+            while(file >> std::noskipws >> c) {
+                this->data.push_back(c);
+            }
+        }
+        if(!file.is_open()) print("Error opening ",this->filename);
+        return file.is_open();
+    };
+
+    size_t inline size() {return this->data.size();}
+
+    void close() {
+        std::vector<char>().swap(this->data);
+    }
+
+    TWT_File(std::string _filename): filename(_filename) {
+        this->valid = this->import();
+    }
+
+};
+
 struct TWT_Packet {
     tcp::socket *sock;
-
-    char *data;
+    std::vector<char> data;
+    DataType type;
     size_t size;
 
-    void import_message(const std::string &message) {
-        clear_buffer(this->data,this->size);
-        for(int i=0;i<message.size();++i) {
-            this->data[i] = message[i];
+    //Structure:
+    // 1 byte for data type
+    // 64 bytes for size
+    // n bytes for data
+
+    void format_data();
+
+    void import_string(const std::string &message) {
+        for(auto character : message) {
+            this->data.push_back(character);
         }
     }
 
-    TWT_Packet(tcp::socket *_sock,const std::string &_message): sock(_sock) {
+    TWT_Packet(tcp::socket *_sock,const std::string &message): sock(_sock) {
 
-        //Set buffer size to global default
-        this->size = TWT_BUFFER_SIZE;
+        this->type = DATA_MSG;
+        this->import_string(message);
 
-        //Allocate proper memory
-        this->data = (char*)std::malloc(TWT_BUFFER_SIZE);
+        this->format_data();
+        this->size = this->data.size();
+    }
 
-        this->import_message(_message);
+    TWT_Packet(tcp::socket *_sock,std::vector<char> _data, DataType _type): sock(_sock), data(_data), type(_type) {
+
+        this->format_data();
+        this->size = this->data.size();
     }
 };
 

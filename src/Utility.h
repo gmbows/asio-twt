@@ -15,8 +15,20 @@ extern std::string command,cursor;
 extern std::stringstream statement;
 
 std::vector<std::string> convert_char_array(char**,int);
+std::vector<char> clean_vector(std::vector<char>&);
 
 std::string operator *(const std::string &s, int len);
+
+template <typename T>
+std::vector<T> array_to_vector(T* arr,size_t size) {
+    std::vector<T> v;
+    for(int i=0;i<size;++i) {
+        v.push_back(arr[i]);
+    }
+    return v;
+}
+
+void pad(std::string &s, int len,std::string t);
 
 template <class T>
 void print(T t) {
@@ -68,3 +80,4 @@ int tokenize(const std::string &input,std::vector<std::string> &args);
 
 size_t import_file(const std::string &filename,char*&);
 bool export_file(const std::string &filename,char*,size_t size);
+bool file_exists(std::string filename);

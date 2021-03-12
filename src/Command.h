@@ -22,10 +22,10 @@ void CMD_Chat(TWT_Peer *peer, const std::string &cmd, const std::vector<std::str
     }
     cursor = "chat "+sock+">";
     while(msg != "q" and msg != "quit") {
-        peer->TWT_FormatAndSend(msg,sock);
+        peer->TWT_PackageAndSend(msg,sock);
         msg = read_command(cursor);
     }
-    peer->TWT_FormatAndSend("Chat room closed",sock);
+    peer->TWT_PackageAndSend("Chat room closed",sock);
     cursor = ">>";
 }
 
@@ -34,8 +34,29 @@ void CMD_Close(TWT_Peer *peer, const std::string &cmd, const std::vector<std::st
     try {
         sock_id = args.at(1);
     } catch(const std::exception &e) {
-//                print("Usage: ")
-        sock_id = "0";
+        print("Usage: close <sockid>");
+        return;
     }
     peer->TWT_MarkSocketForClosing(sock_id);
+}
+
+void CMD_Send(TWT_Peer *peer, std::string cmd,const std::vector<std::string> &args) {
+    std::string filename,sockID;
+    try {
+        filename = args.at(1);
+        sockID = args.at(2);
+    } catch(const std::exception &e) {
+        return;
+    }
+
+    TWT_File file = TWT_File(filename);
+
+    if(!file.valid) {
+        print(filename,": File not found");
+    } else {
+        print("Filename: ", file.filename);
+        print("Size: ", file.size(), " bytes");
+
+        peer->TWT_PackageAndSend(file.data, sockID);
+    }
 }

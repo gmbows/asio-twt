@@ -13,6 +13,16 @@ std::string operator *(const std::string &s, int len) {
     return output;
 }
 
+std::vector<char> clean_vector(std::vector<char> &v) {
+    std::vector<char> n;
+    for(int i=0;i<v.size();++i) {
+        if(v.at(i) != '\0') {
+            n.push_back(v.at(i));
+        }
+    }
+    return n;
+}
+
 //Converts char* array of length len to string vector
 std::vector<std::string> convert_char_array(char** arr,int len) {
     std::vector<std::string> v;
@@ -104,13 +114,20 @@ std::string read_command(const std::string &_cursor) {
     return "ERR_COMMAND_INVALID";
 }
 
-size_t import_file(const std::string &filename,char* &data) {
-    std::ifstream image(filename,std::ios::binary);
+void pad(std::string &s, int len,std::string t) {
+    while(s.size() < len) {
+        s.insert(0,t);
+    }
+}
 
-    if(!image.is_open()) {
-        print("(import) Error opening ",filename);
+size_t import_file(const std::string &filename,char* &data) {
+
+    if(!file_exists(filename)) {
+        print("import_file: file not found");
         return false;
     }
+
+    std::ifstream image(filename,std::ios::binary);
 
     //Seek to EOF and check position in stream
     image.seekg(0,image.end);
@@ -130,14 +147,17 @@ size_t import_file(const std::string &filename,char* &data) {
 }
 
 bool export_file(const std::string &filename,char* bytes,size_t size) {
+
     std::ofstream image(filename,std::ios::binary);
-    if(!image.is_open()) {
-        std::cout << "(export) Error opening "+filename << std::endl;
-        return false;
-    }
+
     for(int i=0;i<size;i++) {
         image << bytes[i];
     }
     image.close();
     return true;
+}
+
+bool file_exists(std::string filename) {
+    std::ifstream image(filename,std::ios::binary);
+    return image.is_open();
 }

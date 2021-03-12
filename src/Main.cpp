@@ -32,6 +32,7 @@ int main(int argc, char** argv) {
     //File import test
     char *temp;
     size_t size = import_file("twt.exe",temp);
+//    print(size);
 
     while(true) {
         std::vector<std::string> args;
@@ -66,7 +67,7 @@ int main(int argc, char** argv) {
         } else if(cmd == "close") {
             CMD_Close(peer,cmd,args);
         } else if(cmd == "send") {
-            //Send file....
+            CMD_Send(peer,cmd,args);
         } else {
             print("Unknown command:",cmd);
         }

@@ -48,6 +48,12 @@ class TWT_Peer {
         bool active;
         bool listening;
 
+        //File reading
+        bool reading;
+        DataType readingType;
+        int bytesRemaining;
+        std::vector<char> buffer;
+
         int numConnections;
 
         //Server functionality
@@ -63,12 +69,16 @@ class TWT_Peer {
         //Thread routine for handling incoming connections
         void TWT_AwaitReadJob(TWT_Thread*);
         void TWT_ServeSocket(tcp::socket*,TWT_Thread*);
+        void HandlePacket(std::vector<char> data);
 
         void TWT_Link(tcp::socket*);
 
         //Client functionality
         void TWT_SendPacket(TWT_Packet*);
-        void TWT_FormatAndSend(const std::string&,const std::string&);
+        void TWT_PackageAndSend(const std::string&,const std::string&);
+        void TWT_PackageAndSend(std::vector<char> data,const std::string&);
+        void TWT_PackageAndSend(std::vector<char> data,tcp::socket* sock);
+
         bool TWT_Connect(const std::string &host);
 
         //Thread routine for handling outgoing connections
@@ -102,8 +112,10 @@ class TWT_Peer {
 
         TWT_Peer(int _port,int numThreads): port(_port),acceptor(new tcp::acceptor(io_context, tcp::endpoint(tcp::v4(), _port))),resolver(new tcp::resolver(io_context)) {
 
-            this->listening = false;
             this->active = true;
+            this->listening = false;
+
+            this->reading = false;
 
             pthread_cond_init(&this->gotReadJob,NULL);
             pthread_cond_init(&this->gotWriteJob,NULL);
