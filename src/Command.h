@@ -46,6 +46,7 @@ void CMD_Send(TWT_Peer *peer, std::string cmd,const std::vector<std::string> &ar
         filename = args.at(1);
         sockID = args.at(2);
     } catch(const std::exception &e) {
+		//Print an error...
         return;
     }
 

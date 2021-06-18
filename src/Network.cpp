@@ -74,36 +74,85 @@ void TWT_Peer::TWT_AwaitReadJob(TWT_Thread *caller) {
 void TWT_Peer::HandlePacket(std::vector<char> data) {
     if(data.size() == 0) return;
 
-    this->readingType = (DataType)(data.at(1)-'0');
-    data.erase(data.begin(),data.begin()+2);
-
+    //If we are not currently reading some data
+    // We should expect this packet to contain some header information
     if(!this->reading) {
-        std::string size;
-        //Temporary solution
+
         this->readingType = (DataType)(data.at(1)-'0');
-        data.erase(data.begin(),data.begin()+TWT_PAD_TYPE-1);
+        data.erase(data.begin(),data.begin()+TWT_PAD_TYPE);
 
-        if(this->readingType == DATA_MSG) {
-            data.erase(data.begin(),data.begin()+TWT_PAD_SIZE-1);
-            std::string msg;
-            for(auto c : data)
-                msg+=c;
-            if(msg.size() > 0) print("(Remote) ",msg);
-            return;
+        print("Reading packet with data type: ",this->readingType);
+
+        std::string size;
+		bool padded = true;
+        for (int i = 0; i < TWT_PAD_SIZE; i++) {
+			
+			try {
+				size += data.at(i);
+			} catch(const std::exception &e) {
+				print("Found padding error while reading message length");
+				size = std::to_string(i);
+				padded = false;
+				break;
+			}
         }
 
-        for(int i=0;i<TWT_PAD_SIZE;i++) {
-            size += data.at(i);
-        }
-        data.erase(data.begin(),data.begin()+64);
+		//if(padded) should be factored out eventually
+        if(padded) data.erase(data.begin(), data.begin() + TWT_PAD_SIZE);
+
         try {
             this->bytesRemaining = std::stoi(size);
-        } catch(const std::exception &e) {
+        } catch (const std::exception &e) {
             print("BytesRemaining error");
             return;
         }
+		
+		//If we are reading a file, get the filename
+		if(this->readingType == DATA_FILE_INFO) {
+			for (int i = 0; i < TWT_PAD_FILENAME; i++) {
+				try {
+					this->fname += data.at(i);
+				} catch(const std::exception &e) {
+					print("Found padding error while reading filename");
+					size = std::to_string(i);
+					padded = false;
+					break;
+				}
+			}
+		}
+
         this->reading = true;
-    } else {
+    }
+	
+	//Delete everything below this line and rewrite it
+
+    if(this->reading) {
+        for (auto c : data) {
+            if (--this->bytesRemaining == 0) {
+                this->reading = false;
+            }
+            this->buffer.push_back(c);
+		}
+		
+        switch(this->readingType) {
+            case DATA_FILE_INFO: {
+                for (auto c : data) {
+                    if (--this->bytesRemaining == 0) {
+                        print("File read");
+                        this->reading = false;
+                    }
+                    this->buffer.push_back(c);
+                }
+            }
+
+            case DATA_MSG: {
+				std::string msg;
+				for(auto c : data) msg+=c;
+				if(msg.size() > 0) print("(Remote) ",msg);
+				return;
+			}
+        }
+        //We are reading the body of a file
         for(auto c : data) {
             if(--this->bytesRemaining == 0) {
                 print("File read");

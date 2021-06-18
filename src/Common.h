@@ -5,13 +5,13 @@
 
 #define TWT_BUFFER_SIZE 1024
 #define TWT_PAD_TYPE 2
-#define TWT_PAD_SIZE 64
-
-//extern std::string command,cursor;
+#define TWT_PAD_SIZE 16
+#define TWT_PAD_FILENAME 255
 
 enum DataType {
     DATA_MSG,
-    DATA_FILE,
+    DATA_FILE_INFO,
+    DATA_FILE_BODY,
 };
 
 

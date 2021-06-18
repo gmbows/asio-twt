@@ -8,8 +8,6 @@
 #include "Common.h"
 #include "Utility.h"
 
-
-
 class TWT_Peer;
 
 using asio::ip::tcp;
@@ -52,6 +50,9 @@ struct TWT_Packet {
     DataType type;
     size_t size;
 
+    //Position of header index in data
+    unsigned int pos = 0;
+
     //Structure:
     // 1 byte for data type
     // 64 bytes for size
@@ -65,6 +66,8 @@ struct TWT_Packet {
         }
     }
 
+    void append_header(std::string s,int padding);
+
     TWT_Packet(tcp::socket *_sock,const std::string &message): sock(_sock) {
 
         this->type = DATA_MSG;
@@ -75,7 +78,6 @@ struct TWT_Packet {
     }
 
     TWT_Packet(tcp::socket *_sock,std::vector<char> _data, DataType _type): sock(_sock), data(_data), type(_type) {
-
         this->format_data();
         this->size = this->data.size();
     }

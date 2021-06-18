@@ -53,6 +53,10 @@ class TWT_Peer {
         DataType readingType;
         int bytesRemaining;
         std::vector<char> buffer;
+		
+		//Filename of file currently being received
+		//There's probably a better way to do this...?
+		std::string fname;
 
         int numConnections;
 
