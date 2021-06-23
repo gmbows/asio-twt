@@ -3,6 +3,35 @@
 #include <fstream>
 #include <sstream>
 
+#ifdef _WIN32
+#include <conio.h>
+#else
+
+#include <termios.h>
+static struct termios old,_new;
+
+void initTermios() {
+	tcgetattr(0,&old);
+	_new = old;
+	_new.c_lflag &= ~ICANON;
+	_new.c_lflag &= ~ECHO;
+	tcsetattr(0,TCSANOW,&_new);
+}
+
+void resetTermios() {
+	tcsetattr(0,TCSANOW,&old);
+}
+
+int getch() {
+	//std::cout << "Not supported yet!" << std::endl;
+	char c;
+	initTermios();
+	c = getchar();
+	resetTermios();
+	return c;
+}
+#endif
+
 std::stringstream statement;
 
 std::string operator *(const std::string &s, int len) {

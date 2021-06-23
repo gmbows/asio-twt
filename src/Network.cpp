@@ -8,7 +8,7 @@
 #include "Common.h"
 #include "NetworkUtils.h"
 // #include "Command.h"
-#include <SDL2/SDL.h>
+//#include <SDL2/SDL.h>
 
 using asio::ip::tcp;
 
@@ -195,7 +195,7 @@ void TWT_Peer::TWT_ServeSocket(tcp::socket *sock,TWT_Thread *caller) {
         case 2:
             break;
         default:
-            print("Unexpected socket error: ",error.value(),", ",error.message);
+            print("Unexpected socket error: ",error.value(),", ",error.message());
     }
     this->TWT_MarkSocketForClosing(sock);
 }
@@ -385,6 +385,6 @@ void TWT_Peer::TWT_HandleInput() {
 		fgets(in,3,stdin);
 		std::string s(in);
         if(s.size() > 0) print(s);
-		SDL_Delay(1000/60);
+		//SDL_Delay(1000/60);
 	}
 }

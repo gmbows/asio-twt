@@ -6,8 +6,6 @@
 #include <vector>
 #include <map>
 #include <pthread.h>
-#include <conio.h>
-#include <SDL2/SDL.h>
 
 #include "Common.h"
 

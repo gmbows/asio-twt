@@ -8,7 +8,7 @@ bin/Command.o: src/Command.cpp src/Command.h
 	g++ src/Command.cpp -c -o bin/Command.o
 
 bin/Utility.o: src/Utility.cpp src/Utility.h
-	g++ src/Utility.cpp -c -o bin/Utility.o -I /include/SDL2 -L /lib -lmingw32 -lSDL2main -lSDL2
+	g++ src/Utility.cpp -c -o bin/Utility.o -I /include/SDL2 -L /lib -lmingw32
 
 bin/Thread.o: src/Thread.cpp src/Thread.h
 	g++ src/Thread.cpp -c -o bin/Thread.o
