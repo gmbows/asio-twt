@@ -5,9 +5,12 @@
 
 #ifdef _WIN32
 #include <conio.h>
+#define KEYCODE_RETURN 13
+#define KEYCODE_BS 8
 #else
-
 #include <termios.h>
+#define KEYCODE_RETURN 10
+#define KEYCODE_BS 127
 static struct termios old,_new;
 
 void initTermios() {
@@ -118,14 +121,15 @@ std::string read_command(const std::string &_cursor) {
 
     while(true) {
         int keycode = getch();
+	//print("GOT KEYCODE",keycode);
         switch(keycode) {
-            case 13:
+            case KEYCODE_RETURN:
                 std::cout << std::endl;
                 command = "";
                 return cmd;
             case 3:
                 return "quit";
-            case 8:
+            case KEYCODE_BS:
                 cmd = cmd.substr(0,cmd.size()-1);
                 break;
             default:

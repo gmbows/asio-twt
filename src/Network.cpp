@@ -104,6 +104,9 @@ void TWT_Peer::HandlePacket(tcp::socket *sock, std::vector<char> data) {
 		//if(padded) should be factored out eventually
         if(padded) data.erase(data.begin(), data.begin() + TWT_PAD_SIZE);
 
+		for(auto c : data) std::cout << c << std::flush;
+		std::cout << std::endl;
+
         try {
             this->bytesRemaining = std::stoi(size);
         } catch (const std::exception &e) {
@@ -153,21 +156,21 @@ void TWT_Peer::HandlePacket(tcp::socket *sock, std::vector<char> data) {
 						f.write(this->buffer);
 						print("Received remote file \"",this->fname,"\"");
 						this->TWT_PackageAndSend(this->fname, sock,TWT_ACK);
-						return;
+						break;
 					}
 					case DATA_MSG: {
 						std::string msg;
 						clean_vector(data);
 						for(auto c : data) msg+=c;
 						if(msg.size() > 0) print("(Remote) ",msg);
-						return;
+						break;
 					}
 					case TWT_ACK: {
 						std::string msg;
 						clean_vector(data);
 						for(auto c : data) msg+=c;
 						if(msg.size() > 0) print("(Remote) Received file ",msg);
-						return;
+						break;
 					}
 				}
 				this->reset();
