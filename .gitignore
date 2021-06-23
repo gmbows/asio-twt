@@ -5,3 +5,6 @@ bin/
 #Ignore executables
 *.exe
 twt
+
+#Ignore test files
+test.*

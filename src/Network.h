@@ -43,6 +43,8 @@ class TWT_Peer {
         TWT_ThreadPool<TWT_ReadThread> readers;
         TWT_ThreadPool<TWT_WriteThread> writers;
 
+
+		//Basic information
         int port;
 
         bool active;
@@ -73,15 +75,17 @@ class TWT_Peer {
         //Thread routine for handling incoming connections
         void TWT_AwaitReadJob(TWT_Thread*);
         void TWT_ServeSocket(tcp::socket*,TWT_Thread*);
-        void HandlePacket(std::vector<char> data);
+        void HandlePacket(tcp::socket *sock,std::vector<char> data);
 
         void TWT_Link(tcp::socket*);
 
         //Client functionality
+		void TWT_HandleInput();
         void TWT_SendPacket(TWT_Packet*);
         void TWT_PackageAndSend(const std::string&,const std::string&);
-        void TWT_PackageAndSend(std::vector<char> data,const std::string&);
-        void TWT_PackageAndSend(std::vector<char> data,tcp::socket* sock);
+        void TWT_PackageAndSend(const std::string&,tcp::socket *sock,DataType type = DATA_MSG);
+        void TWT_PackageAndSend(std::vector<char> data,const std::string&,DataType type = DATA_MSG);
+        // void TWT_PackageAndSend(std::vector<char> data,tcp::socket* sock);
 
         bool TWT_Connect(const std::string &host);
 
@@ -96,6 +100,7 @@ class TWT_Peer {
          * Pass TWT_SafePop a queue and the correct lock
          * Currently we use the same lock for all queues
         */
+		void reset();
         tcp::socket* TWT_PopReadQueue();
         tcp::socket* TWT_PopClosingQueue();
         TWT_Packet* TWT_PopWriteQueue();

@@ -12,6 +12,13 @@ void CMD_Connect(TWT_Peer *peer, const std::string &cmd, const std::vector<std::
     }
 }
 
+void CMD_Serv(TWT_Peer *peer, const std::string &cmd, const std::vector<std::string> &args) {
+    peer->TWT_Listen();
+
+	//Wait for thread to enter listening function
+	while(!peer->listening) {}
+}
+
 void CMD_Chat(TWT_Peer *peer, const std::string &cmd, const std::vector<std::string> &args) {
     std::string msg = "Chat room opened";
     std::string sock = "0";
@@ -55,9 +62,10 @@ void CMD_Send(TWT_Peer *peer, std::string cmd,const std::vector<std::string> &ar
     if(!file.valid) {
         print(filename,": File not found");
     } else {
-        print("Filename: ", file.filename);
+        print("Sending file: ", file.filename);
         print("Size: ", file.size(), " bytes");
-
-        peer->TWT_PackageAndSend(file.data, sockID);
+		
+		//file.serialized() pads filename in front of bytes
+        peer->TWT_PackageAndSend(file.serialized(), sockID,DATA_FILE);
     }
 }

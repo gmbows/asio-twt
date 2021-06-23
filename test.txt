@@ -1,7 +1,1 @@
-# Ignore project files
-.idea/
-bin/
-
-#Ignore executables
-*.exe
-twt
+Test

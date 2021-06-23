@@ -30,10 +30,17 @@ int main(int argc, char** argv) {
     TWT_Peer *peer = new TWT_Peer(5555,10);
 
     //File import test
-    char *temp;
-    size_t size = import_file("twt.exe",temp);
+    // char *temp;
+    // size_t size = import_file("twt.exe",temp);
 //    print(size);
 
+	TWT_InputThread input = TWT_InputThread();
+	// input.start(peer);
+	
+	// int hi;
+	
+	// for(int i=0;i<10;i++) std::cin >> hi;
+	// while(true){}
 
     while(true) {
         std::vector<std::string> args;
@@ -52,11 +59,11 @@ int main(int argc, char** argv) {
             }
             peer->TWT_Deactivate();
             break;
+		} else if(cmd == "link") {
+			CMD_Serv(peer,cmd,args);
+			CMD_Connect(peer,cmd,args);
         } else if(cmd == "serv") {
-            peer->TWT_Listen();
-
-            //Wait for thread to enter listening function
-            while(!peer->listening) {}
+            CMD_Serv(peer,cmd,args);
         } else if(cmd == "connect") {
 			CMD_Connect(peer,cmd,args);
         } else if(cmd == "chat") {

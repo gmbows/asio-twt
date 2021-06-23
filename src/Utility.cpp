@@ -13,14 +13,18 @@ std::string operator *(const std::string &s, int len) {
     return output;
 }
 
-std::vector<char> clean_vector(std::vector<char> &v) {
+void clean_vector(std::vector<char> &v) {
     std::vector<char> n;
-    for(int i=0;i<v.size();++i) {
-        if(v.at(i) != '\0') {
-            n.push_back(v.at(i));
-        }
-    }
-    return n;
+	while(v.at(v.size()-1) == '\0') {
+		v.erase(v.begin()+(v.size()-1));
+	}
+	// return;
+    // for(int i=0;i<v.size();++i) {
+        // if(v.at(i) != '\0') {
+            // n.push_back(v.at(i));
+        // }
+    // }
+    // return n;
 }
 
 //Converts char* array of length len to string vector

@@ -7,6 +7,7 @@
 #include <map>
 #include <pthread.h>
 #include <conio.h>
+#include <SDL2/SDL.h>
 
 #include "Common.h"
 
@@ -15,7 +16,7 @@ extern std::string command,cursor;
 extern std::stringstream statement;
 
 std::vector<std::string> convert_char_array(char**,int);
-std::vector<char> clean_vector(std::vector<char>&);
+void clean_vector(std::vector<char>&);
 
 std::string operator *(const std::string &s, int len);
 

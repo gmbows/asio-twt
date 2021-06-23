@@ -7,6 +7,8 @@
 #include "Common.h"
 #include "NetworkUtils.h"
 
+void handle_input();
+
 void DefaultRoutine(TWT_Peer *peer,TWT_Thread *thread) {
     print("Error: Calling default thread routine (overwrite this)");
 }
@@ -16,7 +18,7 @@ void Listen(TWT_Peer *peer,TWT_Thread *thread) {
 }
 
 void HandleInput(TWT_Peer *peer,TWT_Thread *thread) {
-//    handle_input();
+   peer->TWT_HandleInput();
 }
 
 void AwaitReadJob(TWT_Peer *peer,TWT_Thread *thread) {

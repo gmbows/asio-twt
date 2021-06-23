@@ -7,6 +7,8 @@
 #include "Utility.h"
 #include "Common.h"
 #include "NetworkUtils.h"
+// #include "Command.h"
+#include <SDL2/SDL.h>
 
 using asio::ip::tcp;
 
@@ -71,19 +73,21 @@ void TWT_Peer::TWT_AwaitReadJob(TWT_Thread *caller) {
     }
 }
 
-void TWT_Peer::HandlePacket(std::vector<char> data) {
+void TWT_Peer::HandlePacket(tcp::socket *sock, std::vector<char> data) {
     if(data.size() == 0) return;
 
     //If we are not currently reading some data
     // We should expect this packet to contain some header information
     if(!this->reading) {
 
+		//This is a placeholder
+		//Extract data type from packet
         this->readingType = (DataType)(data.at(1)-'0');
         data.erase(data.begin(),data.begin()+TWT_PAD_TYPE);
 
-        print("Reading packet with data type: ",this->readingType);
-
-        std::string size;
+        // print("Reading packet with data type: ",this->readingType);
+		
+		std::string size;
 		bool padded = true;
         for (int i = 0; i < TWT_PAD_SIZE; i++) {
 			
@@ -103,80 +107,89 @@ void TWT_Peer::HandlePacket(std::vector<char> data) {
         try {
             this->bytesRemaining = std::stoi(size);
         } catch (const std::exception &e) {
-            print("BytesRemaining error");
+            print("Error converting message length to integer");
             return;
         }
 		
-		//If we are reading a file, get the filename
-		if(this->readingType == DATA_FILE_INFO) {
+		//If we are reading a file
+		//Extract the filename from the packet
+		if(this->readingType == DATA_FILE) {
+			//Delete filename padding from data length
+			this->bytesRemaining -= 255;
 			for (int i = 0; i < TWT_PAD_FILENAME; i++) {
 				try {
 					this->fname += data.at(i);
 				} catch(const std::exception &e) {
 					print("Found padding error while reading filename");
-					size = std::to_string(i);
-					padded = false;
 					break;
 				}
 			}
+			data.erase(data.begin(), data.begin() + TWT_PAD_FILENAME);
+			while(fname[0] == '/') this->fname.erase(this->fname.begin());
+			// print("Receiving file "+this->fname);
 		}
-
+		
+		if(this->bytesRemaining != (int)data.size()) {
+			// print("Data length mismatch (",size," vs. ",data.size(),")");
+		}
+		
         this->reading = true;
     }
 	
-	//Delete everything below this line and rewrite it
-
     if(this->reading) {
-        for (auto c : data) {
-            if (--this->bytesRemaining == 0) {
-                this->reading = false;
-            }
-            this->buffer.push_back(c);
-		}
 		
-        switch(this->readingType) {
-            case DATA_FILE_INFO: {
-                for (auto c : data) {
-                    if (--this->bytesRemaining == 0) {
-                        print("File read");
-                        this->reading = false;
-                    }
-                    this->buffer.push_back(c);
-                }
-            }
-
-            case DATA_MSG: {
-				std::string msg;
-				for(auto c : data) msg+=c;
-				if(msg.size() > 0) print("(Remote) ",msg);
-				return;
-			}
-        }
-        //We are reading the body of a file
+        //We are reading data
+		//If we reach the bytecount, decide what to do based on the readingType
         for(auto c : data) {
+			this->buffer.push_back(c);
             if(--this->bytesRemaining == 0) {
-                print("File read");
                 this->reading = false;
+				switch(this->readingType) {
+					case DATA_FILE: {
+						std::string msg;
+						for(auto c : data) msg+=c;
+						// Accept or reject file here
+						TWT_File f = TWT_File(this->fname);
+						f.write(this->buffer);
+						print("Received remote file \"",this->fname,"\"");
+						this->TWT_PackageAndSend(this->fname, sock,TWT_ACK);
+						return;
+					}
+					case DATA_MSG: {
+						std::string msg;
+						clean_vector(data);
+						for(auto c : data) msg+=c;
+						if(msg.size() > 0) print("(Remote) ",msg);
+						return;
+					}
+					case TWT_ACK: {
+						std::string msg;
+						clean_vector(data);
+						for(auto c : data) msg+=c;
+						if(msg.size() > 0) print("(Remote) Received file ",msg);
+						return;
+					}
+				}
+				this->reset();
             }
-            this->buffer.push_back(c);
         }
     }
 }
 
 void TWT_Peer::TWT_ServeSocket(tcp::socket *sock,TWT_Thread *caller) {
     print("Received link from ",get_address(sock));
-    char data[1024];
-    clear_buffer(data,1024);
+    char data[TWT_BUFFER_SIZE];
+    clear_buffer(data,TWT_BUFFER_SIZE);
     std::vector<char> vdata;
     asio::error_code error;
     while(!error) {
-        size_t len = sock->read_some(asio::buffer(data,1024), error);
+        size_t len = sock->read_some(asio::buffer(data,TWT_BUFFER_SIZE), error);
 
-        vdata = array_to_vector(data,1024);
-        vdata = clean_vector(vdata);
-        this->HandlePacket(vdata);
+        vdata = array_to_vector(data,TWT_BUFFER_SIZE);
+        // vdata = clean_vector(vdata);
+        this->HandlePacket(sock,vdata);
 
-        clear_buffer(data,1024);
+        clear_buffer(data,TWT_BUFFER_SIZE);
     }
     switch(error.value()) {
         case 2:
@@ -240,7 +253,17 @@ void TWT_Peer::TWT_PackageAndSend(const std::string &message,const std::string &
     pthread_cond_signal(&this->gotWriteJob);
 }
 
-void TWT_Peer::TWT_PackageAndSend(std::vector<char> data,const std::string &socket_id) {
+void TWT_Peer::TWT_PackageAndSend(const std::string& message,tcp::socket *sock,DataType type) {
+
+    //Package message
+    TWT_Packet *packet = new TWT_Packet(sock,message,type);
+    this->pendingData.push(packet);
+
+    //Send signal to deliver new write job
+    pthread_cond_signal(&this->gotWriteJob);
+}
+
+void TWT_Peer::TWT_PackageAndSend(std::vector<char> data,const std::string &socket_id,DataType type) {
     if(!contains(this->addressMap,socket_id)) {
         print("No active connection with id ",socket_id);
         return;
@@ -248,7 +271,7 @@ void TWT_Peer::TWT_PackageAndSend(std::vector<char> data,const std::string &sock
 
     //Package message
     tcp::socket *sock = this->addressMap.at(socket_id);
-    TWT_Packet *packet = new TWT_Packet(sock,data,DATA_MSG);
+    TWT_Packet *packet = new TWT_Packet(sock,data,type);
     this->pendingData.push(packet);
 
     //Send signal to deliver new write job
@@ -318,6 +341,7 @@ void TWT_Peer::TWT_CloseSocket(tcp::socket *sock) {
     } catch(const std::exception &e) {
         print("General error: ",e.what());
     }
+	// this->numConnections--;
 }
 
 void TWT_Peer::TWT_MarkSocketForClosing(tcp::socket *sock) {
@@ -347,4 +371,20 @@ void TWT_Peer::TWT_AwaitCloseJob(TWT_Thread *caller) {
 
         this->TWT_CloseSocket(sock);
     }
+}
+
+void TWT_Peer::reset() {
+	std::vector<char>().swap(this->buffer);
+	this->fname = "";
+	// this->bytesRemaining = -1;
+}
+
+void TWT_Peer::TWT_HandleInput() {
+	while(true) {
+		char in[3];
+		fgets(in,3,stdin);
+		std::string s(in);
+        if(s.size() > 0) print(s);
+		SDL_Delay(1000/60);
+	}
 }

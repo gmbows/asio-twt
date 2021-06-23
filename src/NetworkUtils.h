@@ -21,6 +21,7 @@ struct TWT_File {
     bool valid;
 
     bool import() {
+		//If this is an existing file, import the file
         std::ifstream file(this->filename,std::ios::binary);
         if(file.is_open()) {
             char c;
@@ -31,12 +32,39 @@ struct TWT_File {
         if(!file.is_open()) print("Error opening ",this->filename);
         return file.is_open();
     };
+	
+	bool write(std::vector<char> bytes) {
+		std::ofstream file(this->filename,std::ios::binary);
+        if(file.is_open()) {
+			for(auto c : bytes) {
+				file << c;
+			}
+			file.close();
+        }
+        // if(!file.is_open()) print("Error writing to ",this->filename);
+        return true;
+	}
 
     size_t inline size() {return this->data.size();}
 
     void close() {
         std::vector<char>().swap(this->data);
     }
+	
+	std::vector<char> serialized() {
+		std::vector<char> serial;
+		
+		std::string fname = this->filename;
+		pad(fname,TWT_PAD_FILENAME,"/");
+		
+		for(auto c : fname) {
+			serial.push_back(c);
+		}
+		for(auto c : this->data) {
+			serial.push_back(c);
+		}
+		return serial;
+	}
 
     TWT_File(std::string _filename): filename(_filename) {
         this->valid = this->import();
@@ -78,6 +106,13 @@ struct TWT_Packet {
     }
 
     TWT_Packet(tcp::socket *_sock,std::vector<char> _data, DataType _type): sock(_sock), data(_data), type(_type) {
+        this->format_data();
+        this->size = this->data.size();
+    }
+	
+	TWT_Packet(tcp::socket *_sock,const std::string &message, DataType _type): sock(_sock), type(_type) {
+        this->import_string(message);
+
         this->format_data();
         this->size = this->data.size();
     }
