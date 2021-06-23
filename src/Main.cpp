@@ -54,6 +54,7 @@ int main(int argc, char** argv) {
 
         if(cmd == "q" or cmd == "quit") {
             for(auto &connection: peer->addressMap) {
+				peer->TWT_PackageAndSend("",connection.second,TWT_CLOSE);
                 peer->TWT_MarkSocketForClosing(connection.second);
             }
             peer->TWT_Deactivate();
@@ -79,6 +80,6 @@ int main(int argc, char** argv) {
             print("Unknown command:",cmd);
         }
     }
-    std::cout << "Exiting" << std::flush;
+    std::cout << "Exiting" << std::endl;
     return 0;
 }

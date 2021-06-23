@@ -13,6 +13,7 @@ enum DataType {
     DATA_MSG,
     DATA_FILE,
 	TWT_ACK,
+	TWT_CLOSE,
 };
 
 

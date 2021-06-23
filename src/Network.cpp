@@ -80,7 +80,7 @@ void TWT_Peer::HandlePacket(tcp::socket *sock, std::vector<char> data) {
     // We should expect this packet to contain some header information
     if(!this->reading) {
 
-		//This is a placeholder
+		//This is a placeholder, only works for single-digit data types
 		//Extract data type from packet
         this->readingType = (DataType)(data.at(1)-'0');
         data.erase(data.begin(),data.begin()+TWT_PAD_TYPE);
@@ -104,14 +104,14 @@ void TWT_Peer::HandlePacket(tcp::socket *sock, std::vector<char> data) {
 		//if(padded) should be factored out eventually
         if(padded) data.erase(data.begin(), data.begin() + TWT_PAD_SIZE);
 
-		for(auto c : data) std::cout << c << std::flush;
-		std::cout << std::endl;
-
         try {
             this->bytesRemaining = std::stoi(size);
         } catch (const std::exception &e) {
-            print("Error converting message length to integer");
-            return;
+            //print("Error converting message length to integer (",size,")");
+			//std::cout << "<" << std::flush;
+			//for(auto c : data) std::cout << c << std::flush;
+        	//std::cout << ">" << std::endl;
+			return;
         }
 		
 		//If we are reading a file
@@ -171,6 +171,10 @@ void TWT_Peer::HandlePacket(tcp::socket *sock, std::vector<char> data) {
 						for(auto c : data) msg+=c;
 						if(msg.size() > 0) print("(Remote) Received file ",msg);
 						break;
+					}
+					case TWT_CLOSE: {
+                        print("(Remote) Received disconnect");
+                        break;	
 					}
 				}
 				this->reset();
@@ -327,7 +331,7 @@ void TWT_Peer::TWT_CloseSocket(tcp::socket *sock) {
     try {
         if (sock->is_open()) {
             sock->shutdown(tcp::socket::shutdown_send, err);
-            if(err) print("TWT_CloseSocket():",err.message());
+            //if(err) print("TWT_CloseSocket():",err.message());
         }
     } catch(const std::exception &e) {
         print("Error closing socket: ",e.what());
