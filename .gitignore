@@ -8,3 +8,6 @@ twt
 
 #Ignore test files
 test.*
+
+#Ignore swap files
+#*.swp
