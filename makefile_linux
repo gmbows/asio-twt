@@ -1,20 +1,23 @@
-twt: bin/Main.o bin/Utility.o bin/Network.o bin/Common.o bin/Thread.o bin/NetworkUtils.o
-	g++ bin/Main.o bin/Utility.o bin/Network.o bin/Common.o bin/Thread.o bin/NetworkUtils.o -DASIO_STANDALONE  -lpthread -o twt
+twt: lbin/Main.o lbin/Utility.o lbin/Network.o lbin/Common.o lbin/Thread.o lbin/NetworkUtils.o
+	g++ lbin/Main.o lbin/Utility.o lbin/Network.o lbin/Common.o lbin/Thread.o lbin/NetworkUtils.o -DASIO_STANDALONE  -lpthread -o twt
 
-bin/Main.o: src/Main.cpp
-	g++ src/Main.cpp -DASIO_STANDALONE  -c -lpthread -o bin/Main.o
+lbin/Main.o: src/Main.cpp
+	g++ src/Main.cpp -DASIO_STANDALONE  -c -lpthread -o lbin/Main.o
 
-bin/Utility.o: src/Utility.cpp src/Utility.h
-	g++ src/Utility.cpp -DASIO_STANDALONE  -c -lpthread -o bin/Utility.o
+lbin/Utility.o: src/Utility.cpp src/Utility.h
+	g++ src/Utility.cpp -DASIO_STANDALONE  -c -lpthread -o lbin/Utility.o
 
-bin/Thread.o: src/Thread.cpp src/Thread.h
-	g++ src/Thread.cpp -DASIO_STANDALONE  -c -lpthread -o bin/Thread.o
+lbin/Thread.o: src/Thread.cpp src/Thread.h
+	g++ src/Thread.cpp -DASIO_STANDALONE  -c -lpthread -o lbin/Thread.o
 
-bin/Common.o: src/Common.cpp src/Common.h
-	g++ src/Common.cpp -DASIO_STANDALONE  -c -lpthread -o bin/Common.o
+lbin/Common.o: src/Common.cpp src/Common.h
+	g++ src/Common.cpp -DASIO_STANDALONE  -c -lpthread -o lbin/Common.o
 
-bin/NetworkUtils.o: src/NetworkUtils.cpp src/NetworkUtils.h
-	g++ src/NetworkUtils.cpp -DASIO_STANDALONE  -lpthread -c -o bin/NetworkUtils.o
+lbin/NetworkUtils.o: src/NetworkUtils.cpp src/NetworkUtils.h
+	g++ src/NetworkUtils.cpp -DASIO_STANDALONE  -lpthread -c -o lbin/NetworkUtils.o
 
-bin/Network.o: src/Network.cpp src/Network.h
-	g++ src/Network.cpp -DASIO_STANDALONE  -lpthread -c -o bin/Network.o
+lbin/Network.o: src/Network.cpp src/Network.h
+	g++ src/Network.cpp -DASIO_STANDALONE  -lpthread -c -o lbin/Network.o
+
+clean:
+	rm lbin/*
