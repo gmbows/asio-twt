@@ -29,6 +29,10 @@ void AwaitWriteJob(TWT_Peer *peer,TWT_Thread *thread) {
     peer->TWT_AwaitWriteJob(thread);
 }
 
+void AwaitTransfer(TWT_Peer *peer,TWT_Thread *thread) {
+    peer->TWT_AwaitTransfer(thread);
+}
+
 void AwaitCloseJob(TWT_Peer *peer,TWT_Thread *thread) {
     peer->TWT_AwaitCloseJob(thread);
 }

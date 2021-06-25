@@ -17,6 +17,7 @@ typedef void (*ThreadRoutine)(TWT_Peer*,TWT_Thread*);
 void DefaultRoutine(TWT_Peer*,TWT_Thread*);
 void AwaitReadJob(TWT_Peer*,TWT_Thread*);
 void AwaitWriteJob(TWT_Peer*,TWT_Thread*);
+void AwaitTransfer(TWT_Peer*,TWT_Thread*);
 void AwaitCloseJob(TWT_Peer*,TWT_Thread*);
 void Listen(TWT_Peer*,TWT_Thread*);
 void HandleInput(TWT_Peer*,TWT_Thread*);
@@ -101,6 +102,15 @@ struct TWT_WriteThread: public TWT_Thread {
     //Call TWT_Thread constructor
     TWT_WriteThread(): TWT_Thread() {
         this->routine = &AwaitWriteJob;
+    }
+};
+
+//Transfers user data between peers
+struct TWT_TransferThread: public TWT_Thread {
+
+    //Call TWT_Thread constructor
+    TWT_TransferThread(): TWT_Thread() {
+        this->routine = &AwaitTransfer;
     }
 };
 

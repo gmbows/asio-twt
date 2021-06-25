@@ -66,6 +66,24 @@ void CMD_Send(TWT_Peer *peer, std::string cmd,const std::vector<std::string> &ar
         print("Size: ", file.size(), " bytes");
 		
 		//file.serialized() pads filename in front of bytes
-        peer->TWT_PackageAndSend(file.serialized(), sockID,DATA_FILE);
+        peer->TWT_PackageAndSend(file.serialized(), sockID,TWT_FILE);
     }
+}
+
+void CMD_Await(TWT_Peer *peer, std::string cmd,const std::vector<std::string> &args) {
+	print("Waiting for signal");
+	peer->TWT_Await(TWT_SIGN);
+	print("Done waiting");
+}
+
+void CMD_Signal(TWT_Peer *peer, std::string cmd,const std::vector<std::string> &args) {
+	std::string filename,sockID;
+	try {
+        sockID = args.at(1);
+    } catch(const std::exception &e) {
+		//Print an error...
+        return;
+    }
+	print("Signaling socket ",sockID);
+	peer->TWT_PackageAndSend("signal",sockID,TWT_SIGN);
 }

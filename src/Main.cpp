@@ -24,6 +24,13 @@ int main(int argc, char** argv) {
 
     //convert char** args to string vector
     std::vector<std::string> arg_vector = convert_char_array(argv,argc);
+	
+	std::string header_ = "%TWT%PACKETHEADER%TCV1.0";
+	for(char c : header_) {
+		int k = (int)c;
+		k = (k+header_.size())%255;
+		packet_header += ((char)k);
+	}
 
     //Initial peer
     TWT_Peer *peer = new TWT_Peer(5555,10);
@@ -54,7 +61,7 @@ int main(int argc, char** argv) {
 
         if(cmd == "q" or cmd == "quit") {
             for(auto &connection: peer->addressMap) {
-				peer->TWT_PackageAndSend("",connection.second,TWT_CLOSE);
+				peer->TWT_PackageAndSend("",connection.first,TWT_CLOSE);
                 peer->TWT_MarkSocketForClosing(connection.second);
             }
             peer->TWT_Deactivate();
@@ -64,6 +71,10 @@ int main(int argc, char** argv) {
 			CMD_Connect(peer,cmd,args);
         } else if(cmd == "serv") {
             CMD_Serv(peer,cmd,args);
+		} else if(cmd == "await") {
+            CMD_Await(peer,cmd,args);
+		} else if(cmd == "signal") {
+            CMD_Signal(peer,cmd,args);
         } else if(cmd == "connect") {
 			CMD_Connect(peer,cmd,args);
         } else if(cmd == "chat") {
